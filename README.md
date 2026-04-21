@@ -5,7 +5,6 @@
 
 > **🚧 Under construction 🚧**
 > This crate is somewhat experimental: the recommended API may change (in semver-compatible ways) in future versions.
-> The internal [macOS](src/refcount/macos.rs) and [Windows](src/refcount/windows.rs) futex implementations are based on well-documented recipes, but have not been tested.
 
 Scoped lending of borrowed references as `Send`-able smart pointers. Like `thread::scope` without the thread!
 
