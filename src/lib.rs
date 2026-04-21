@@ -219,9 +219,8 @@ pub struct Scope<'a> {
 impl<'a> Scope<'a> {
     /// Creates a [`Lien`] that holds this scope open.
     ///
-    /// The scope's drop blocks until every outstanding `Lien` is dropped, so a
-    /// `Lien` can guarantee that values borrowed by the scope remain alive —
-    /// even across threads.
+    /// The scope's drop blocks until every outstanding `Lien` is dropped, so
+    /// the scope is guaranteed to outlive the `Lien`.
     ///
     /// ```
     /// # use std::{thread, time::{Duration, Instant}};
@@ -258,9 +257,9 @@ impl<'a> Scope<'a> {
     /// } // blocks until the lien is dropped
     /// ```
     ///
-    /// [`Ref`] and [`RefMut`] wrap this pattern safely — prefer
-    /// [`lend`](Scope::lend) and [`lend_mut`](Scope::lend_mut) unless you need
-    /// raw pointer access.
+    /// [`Ref`] and [`RefMut`] wrap this pattern safely. Prefer
+    /// [`lend`](Scope::lend) and [`lend_mut`](Scope::lend_mut) unless you are
+    /// building your own such wrapper.
     #[inline]
     pub fn lien(&self) -> Lien {
         Lien::new(self.__rc)
@@ -538,8 +537,6 @@ macro_rules! impl_deref_traits {
     };
 }
 
-// NonNull<T> is covariant over T — correct for Ref (morally &T).
-//
 /// A sendable shared reference backed by a [`Lien`].
 ///
 /// Similarly, a `Ref<T>` represents a borrow of `T` from a [`Scope`]. Like a
@@ -563,7 +560,7 @@ pub struct Ref<T: ?Sized> {
     _lien: Lien,
 }
 
-// SAFETY: Ref<T> is morally &T, trivially Send but cross-thread needs T: Sync.
+// SAFETY: Ref<T> is morally &T, trivially Send but cross-thread needs T: Sync
 unsafe impl<T: Sync + ?Sized> Send for Ref<T> {}
 unsafe impl<T: Sync + ?Sized> Sync for Ref<T> {}
 
@@ -582,8 +579,8 @@ impl<T: ?Sized> Ref<T> {
     /// scope's rc.
     #[inline]
     pub fn map<R>(&self, f: impl for<'a> FnOnce(&'a T, Rehypothecator<'a>) -> R) -> R {
-        // SAFETY: ptr is valid because the lien keeps the scope alive.
         f(
+            // SAFETY: ptr is valid because the lien keeps the scope alive.
             unsafe { self.ptr.as_ref() },
             Rehypothecator {
                 lien: &self._lien,
@@ -605,9 +602,6 @@ impl<T: ?Sized> From<RefMut<T>> for Ref<T> {
     }
 }
 
-// NonNull<T> is covariant, but PhantomData<*mut T> is invariant — invariant
-// wins, which is correct for RefMut (morally &mut T).
-//
 /// A sendable exclusive reference backed by a [`Lien`].
 ///
 /// Similarly, a `RefMut<T>` represents an exclusive borrow of `T` from a
@@ -653,7 +647,7 @@ pub struct RefMut<T: ?Sized> {
     _phantom: PhantomData<*mut T>,
 }
 
-// SAFETY: RefMut<T> is morally &mut T, which inherits T's Send and Sync-ness.
+// SAFETY: RefMut<T> is morally &mut T, which inherits T's Send and Sync-ness
 unsafe impl<T: Send + ?Sized> Send for RefMut<T> {}
 unsafe impl<T: Sync + ?Sized> Sync for RefMut<T> {}
 
@@ -663,8 +657,8 @@ impl<T: ?Sized> RefMut<T> {
     #[inline]
     pub fn map<R>(self, f: impl for<'a> FnOnce(&'a mut T, Rehypothecator<'a>) -> R) -> R {
         let lien = self._lien;
-        // SAFETY: ptr is valid because the lien keeps the scope alive.
         f(
+            // SAFETY: ptr is valid because the lien keeps the scope alive.
             unsafe { &mut *self.ptr.as_ptr() },
             Rehypothecator {
                 lien: &lien,
@@ -770,6 +764,7 @@ impl<T: Hasher + ?Sized> Hasher for RefMut<T> {
     }
 
     // TODO: nightly fn write_length_prefix (hasher_prefixfree_extras #96762)
+
     // TODO: nightly fn write_str (hasher_prefixfree_extras #96762)
 }
 
@@ -786,6 +781,7 @@ impl<I: Iterator + ?Sized> Iterator for RefMut<I> {
     }
 
     // TODO: nightly fn advance_by (iter_advance_by #77404)
+
     #[inline]
     fn nth(&mut self, n: usize) -> Option<I::Item> {
         (**self).nth(n)
@@ -801,6 +797,7 @@ impl<I: DoubleEndedIterator + ?Sized> DoubleEndedIterator for RefMut<I> {
     }
 
     // TODO: nightly fn advance_back_by (iter_advance_by #77404)
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<I::Item> {
         (**self).nth_back(n)
@@ -841,6 +838,7 @@ impl<T: std::io::Read + ?Sized> std::io::Read for RefMut<T> {
     }
 
     // TODO: nightly fn is_read_vectored (can_vector #69941)
+
     #[inline]
     fn read_to_end(&mut self, buf: &mut Vec<u8>) -> std::io::Result<usize> {
         (**self).read_to_end(buf)
@@ -857,6 +855,7 @@ impl<T: std::io::Read + ?Sized> std::io::Read for RefMut<T> {
     }
 
     // TODO: nightly fn read_buf (read_buf #78485)
+
     // TODO: nightly fn read_buf_exact (read_buf #78485)
 }
 
@@ -873,6 +872,7 @@ impl<T: std::io::Write + ?Sized> std::io::Write for RefMut<T> {
     }
 
     // TODO: nightly fn is_write_vectored (can_vector #69941)
+
     #[inline]
     fn flush(&mut self) -> std::io::Result<()> {
         (**self).flush()
@@ -884,6 +884,7 @@ impl<T: std::io::Write + ?Sized> std::io::Write for RefMut<T> {
     }
 
     // TODO: nightly fn write_all_vectored (write_all_vectored #70436)
+
     #[inline]
     fn write_fmt(&mut self, fmt: fmt::Arguments<'_>) -> std::io::Result<()> {
         (**self).write_fmt(fmt)
@@ -903,6 +904,7 @@ impl<T: std::io::Seek + ?Sized> std::io::Seek for RefMut<T> {
     }
 
     // TODO: nightly fn stream_len (seek_stream_len #59359)
+
     #[inline]
     fn stream_position(&mut self) -> std::io::Result<u64> {
         (**self).stream_position()
@@ -927,6 +929,7 @@ impl<T: std::io::BufRead + ?Sized> std::io::BufRead for RefMut<T> {
     }
 
     // TODO: nightly fn has_data_left (buf_read_has_data_left #86423)
+
     #[inline]
     fn read_until(&mut self, byte: u8, buf: &mut Vec<u8>) -> std::io::Result<usize> {
         (**self).read_until(byte, buf)
@@ -947,15 +950,7 @@ impl<T: std::io::BufRead + ?Sized> std::io::BufRead for RefMut<T> {
 #[doc(hidden)]
 pub use core::marker::PhantomData as __PhantomData;
 
-/// Creates a lending scope via temporary lifetime extension.
-///
-/// Returns `&Scope` — call [`.lend()`](Scope::lend),
-/// [`.lend_mut()`](Scope::lend_mut), or [`.lien()`](Scope::lien) to hand out
-/// references or scope tokens.
-///
-/// The underlying [`Scope`] blocks on drop until all [`Lien`]s (and thus all
-/// [`Ref`]s / [`RefMut`]s) are dropped. The guard itself is an unnamed
-/// temporary extended by TLE — it cannot be `mem::forget`'d.
+/// Creates a [`Scope`].
 ///
 /// ```
 /// # use lien::*;
@@ -974,7 +969,7 @@ pub use core::marker::PhantomData as __PhantomData;
 /// assert_eq!(*r, 99);
 /// ```
 ///
-/// A lent ref keeps the scope's borrow alive — can't use the value after:
+/// A lien lasts until the end of its scope (and its `Scope`):
 /// ```compile_fail
 /// # use lien::*;
 /// let mut v = 42;

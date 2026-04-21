@@ -8,7 +8,7 @@
 // get() resolves the best available impl via dlsym on first access,
 // caching it atomically. dlsym is deterministic per-process, so
 // racing callers resolve the same pointers and the stores are
-// idempotent — we don't care who wins.
+// idempotent---we don't care who wins.
 //
 // see https://github.com/rust-lang/rust/pull/122408 for the std
 // equivalent and app store analysis.

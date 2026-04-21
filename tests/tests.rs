@@ -132,7 +132,6 @@ fn lien_clone_and_drop() {
     drop(l1);
     drop(l2);
     drop(l3);
-    // s drops here, returns immediately — all liens already gone
 }
 
 #[test]
@@ -181,13 +180,14 @@ fn scope_blocks_until_lien_dropped_by_thread() {
             flag2.store(true, Ordering::Release);
             drop(r);
         });
-        // s drops here — must block until the thread drops r
     }
-    // If we get here, the scope waited for the thread.
+
+    // the scope waited for the thread
     assert!(
         flag.load(Ordering::Acquire),
         "scope dropped before lien was released"
     );
+
     // value is usable again after scope exited
     value = 0;
     assert_eq!(value, 0);
@@ -203,5 +203,4 @@ fn scope_survives_panicking_thread() {
         panic!("boom");
     });
     let _ = h.join();
-    // s drops here — lien was dropped during unwinding
 }

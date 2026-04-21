@@ -5,7 +5,7 @@
 // is the opinion of the authors that this is sound. but miri's futex
 // shim simulates the wait as a rust-level u32 atomic read, which it
 // flags as mixed-width UB against our AtomicU64. we never actually
-// deref those pointers in rust, but we can't argue with miri.
+// dereference those pointers in rust, but we can't argue with miri.
 //
 // so we spin instead. wait32 returns immediately (a spurious wakeup)
 // and wait_hi_lo re-checks via the u64 load. this is a valid sim:
