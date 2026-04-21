@@ -64,6 +64,22 @@ use core::{
     task::{Context, Poll},
 };
 
+macro_rules! cfg_select {
+    (@apply [$cond:meta] { $($body:item)* }) => {
+        $( #[cfg($cond)] $body )*
+    };
+    (@munch [$($prev:meta),*] _ => { $($body:item)* }) => {
+        $crate::cfg_select!(@apply [not(any($($prev),*))] { $($body)* });
+    };
+    (@munch [$($prev:meta),*] $cond:meta => { $($body:item)* } $($rest:tt)*) => {
+        $crate::cfg_select!(@apply [all($cond $(, not($prev))*)] { $($body)* });
+        $crate::cfg_select!(@munch [$cond $(, $prev)*] $($rest)*);
+    };
+    (@munch [$($prev:meta),*]) => {};
+    ($($tokens:tt)*) => { $crate::cfg_select!(@munch [] $($tokens)*); };
+}
+pub(crate) use cfg_select;
+
 mod refcount;
 /// Macro-internal and unsafe to touch; see [`__Rc`].
 pub use refcount::__Rc;
@@ -97,7 +113,7 @@ impl Lien {
     fn new(rc: &__Rc) -> Self {
         rc.inc();
         Self {
-            rc: NonNull::from_ref(rc),
+            rc: NonNull::from(rc),
         }
     }
 }

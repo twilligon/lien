@@ -1,6 +1,6 @@
 use core::sync::atomic::{AtomicU64, Ordering};
 
-cfg_select! {
+crate::cfg_select! {
     target_pointer_width = "64" => {
         #[inline]
         pub fn wait(atom: &AtomicU64) {

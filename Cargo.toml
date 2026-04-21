@@ -2,7 +2,7 @@
 name = "lien"
 version = "0.1.1"
 edition = "2024"
-rust-version = "1.95.0"
+rust-version = "1.85.0"
 license = "CC0-1.0"
 description = "Scoped lending of borrowed references"
 repository = "https://github.com/twilligon/lien"

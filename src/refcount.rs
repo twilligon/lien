@@ -148,7 +148,7 @@ fn words(p: *const u64) -> [*const u32; 2] {
     [p as *const u32, unsafe { (p as *const u32).add(1) }]
 }
 
-cfg_select! {
+crate::cfg_select! {
     target_endian = "little" => {
         #[allow(dead_code)]
         #[inline]
@@ -194,7 +194,7 @@ pub(super) fn wake_hi_lo(ptr: *const u64, old: u64, wake32: impl Fn(*const u32))
     }
 }
 
-cfg_select! {
+crate::cfg_select! {
     miri => {
         #[path = "refcount/miri.rs"]
         mod imp;
