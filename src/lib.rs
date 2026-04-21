@@ -213,6 +213,7 @@ impl Drop for Lien {
 ///     scope.lend(&short) // 💥 `short` dropped at end of block
 /// };
 /// ```
+#[must_use]
 pub struct Scope<'a> {
     /// Macro-internal and unsafe to touch; see [`__Rc`].
     ///
