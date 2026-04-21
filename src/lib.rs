@@ -312,6 +312,23 @@ impl<'a> Scope<'a> {
         }
     }
 
+    // per rust reference items.fn.extern.unwind and RFC 2945, unwinding out of
+    // extern "C" frames is defined to abort, and forced unwinding through such
+    // a frame is UB on the unwinder's part---which is the best assignment-of-
+    // blame-to-anyone-but-us we can achieve on stable. inlining doesn't change
+    // this, so the end result is any unwind out of self.__rc.wait() becomes a
+    // process abort regardless of panic strategy or std-ness, a property quite
+    // needed as Scope::drop must NEVER be unwound past. now the ball is in the
+    // hypothetical evil panic handler's court, as it's explicitly forbidden...
+    //
+    // the "real" argument is the above, not "it works on my machine", but fwiw
+    // rustc DOES insert a .gcc_except_table entry to a landing pad to an abort
+    // intrinsic (just ud2 or the like) even when this fn has been inlined away
+    #[inline(always)]
+    extern "C" fn wait(&self) {
+        self.__rc.wait()
+    }
+
     // TODO: an async fn wait could make lien usable in async contexts (w/ sync
     // Drop fallback) but would require a different data layout (storing waiter
     // future, etc.) so we'd need to make things generic and/or have a separate
@@ -321,7 +338,7 @@ impl<'a> Scope<'a> {
 impl Drop for Scope<'_> {
     #[inline]
     fn drop(&mut self) {
-        self.__rc.wait();
+        self.wait();
     }
 }
 

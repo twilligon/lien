@@ -23,9 +23,10 @@ const UL_COMPARE_AND_WAIT64: u32 = 5;
 const ULF_NO_ERRNO: u32 = 0x0100_0000;
 
 const UNINIT: u8 = 0;
-const OS_SYNC: u8 = 1;
-const ULOCK64: u8 = 2;
-const ULOCK32: u8 = 3;
+const FAILED: u8 = 1;
+const OS_SYNC: u8 = 2;
+const ULOCK64: u8 = 3;
+const ULOCK32: u8 = 4;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -66,18 +67,26 @@ impl LazyFutexImpl {
         true
     }
 
+    // extern "C" to stop any panic unwinder, see comment on Scope::wait
+    #[inline]
+    extern "C" fn fail() -> ! {
+        panic!("lien: no futex available (macOS < 10.12?)")
+    }
+
     #[inline]
     fn get(&self) -> FutexImpl {
         loop {
             match self.impt.load(Ordering::Acquire) {
                 UNINIT => {
-                    assert!(
-                        self.dlsym(OS_SYNC, c"os_sync_wait_on_address", c"os_sync_wake_by_address_any")
+                    if !(self.dlsym(OS_SYNC, c"os_sync_wait_on_address", c"os_sync_wake_by_address_any")
                         || self.dlsym(ULOCK64, c"__ulock_wait2", c"__ulock_wake")
-                        || self.dlsym(ULOCK32, c"__ulock_wait", c"__ulock_wake"),
-                        "lien: no futex available (macOS < 10.12?)"
-                    );
+                        || self.dlsym(ULOCK32, c"__ulock_wait", c"__ulock_wake"))
+                    {
+                        self.impt.store(FAILED, Ordering::Release);
+                        Self::fail()
+                    }
                 }
+                FAILED => Self::fail(),
                 OS_SYNC => return FutexImpl::OsSync {
                     os_sync_wait_on_address: unsafe { mem::transmute(self.wait.load(Ordering::Relaxed)) },
                     os_sync_wake_by_address_any: unsafe { mem::transmute(self.wake.load(Ordering::Relaxed)) },

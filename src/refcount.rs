@@ -1,32 +1,5 @@
 use core::sync::atomic::{AtomicU64, Ordering};
 
-#[cfg(any(debug_assertions, miri))]
-cfg_select! {
-    feature = "std" => {
-        //use core::intrinsics::abort;  // TODO: someday this stabilizes
-        use std::process::abort;
-    }
-    _ => {
-        #[cold]
-        #[inline(never)]
-        #[track_caller]
-        fn abort() -> ! {
-            struct PanicOnDrop;
-            impl Drop for PanicOnDrop {
-                #[inline]
-                fn drop(&mut self) {
-                    panic!()
-                }
-            }
-            let _very_panicked = PanicOnDrop;
-            panic!();
-        }
-    }
-}
-
-#[cfg(any(debug_assertions, miri))]
-const MAX_REFCOUNT: u64 = u64::MAX / 2;
-
 /// Macro-internal refcount backing [`Scope`](crate::Scope).
 ///
 /// # Why is this `pub`?
@@ -146,8 +119,8 @@ impl __Rc {
 
         // we might want this always? but... come on, it's a u64
         #[cfg(any(debug_assertions, miri))]
-        if _old_rc > MAX_REFCOUNT {
-            abort();
+        if _old_rc > u64::MAX / 2 {
+            panic!("lien: refcount overflow");
         }
     }
 
