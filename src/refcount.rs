@@ -145,7 +145,7 @@ impl __Rc {
 #[allow(dead_code)]
 #[inline]
 fn words(p: *const u64) -> [*const u32; 2] {
-    [p as *const u32, unsafe { (p as *const u32).add(1) }]
+    [(p as *const u32), (p as *const u32).wrapping_add(1)]
 }
 
 crate::cfg_select! {
