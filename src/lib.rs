@@ -573,9 +573,9 @@ macro_rules! impl_deref_traits {
 
 /// A sendable shared reference backed by a [`Lien`].
 ///
-/// Similarly, a `Ref<T>` represents a borrow of `T` from a [`Scope`]. Like a
-/// static borrow with `&T`, this forces the `Scope` to outlive any `Ref`s made
-/// from it. But like an `Arc`, `Ref<T>` carries no lifetime (it's atomically
+/// A `Ref<T>` represents a borrow of `T` from a [`Scope`]. Like a static
+/// borrow with `&T`, this forces the `Scope` to outlive any `Ref`s made from
+/// it. But like an `Arc`, `Ref<T>` carries no lifetime (it's atomically
 /// reference-counted at runtime), is thread-safe, and can be freely cloned.
 ///
 /// `Ref<T>` requires `T: Sync` to be `Send`, like `&T`:
@@ -648,11 +648,10 @@ impl<T: ?Sized> From<RefMut<T>> for Ref<T> {
 
 /// A sendable exclusive reference backed by a [`Lien`].
 ///
-/// Similarly, a `RefMut<T>` represents an exclusive borrow of `T` from a
-/// [`Scope`]. Like a static borrow with `&mut T`, this forces the `Scope` to
-/// outlive any `RefMut`s made from it. But like an `Arc`, `RefMut<T>` carries
-/// no lifetime (it's atomically reference-counted at runtime) and is
-/// thread-safe.
+/// A `RefMut<T>` represents an exclusive borrow of `T` from a [`Scope`]. Like
+/// a static borrow with `&mut T`, this forces the `Scope` to outlive any
+/// `RefMut`s made from it. But like an `Arc`, `RefMut<T>` carries no lifetime
+/// (it's atomically reference-counted at runtime) and is thread-safe.
 ///
 /// `RefMut<T>` requires `T: Send` to be `Send`, like `&mut T`:
 /// ```compile_fail
