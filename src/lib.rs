@@ -621,6 +621,16 @@ impl<T: ?Sized> Ref<T> {
             },
         )
     }
+
+    /// Returns a raw pointer to the `Ref`'s referent.
+    ///
+    /// The caller must ensure that the `Ref` outlives the pointer this
+    /// function returns, or else it may end up dangling.
+    #[inline]
+    #[must_use]
+    pub fn as_ptr(this: &Self) -> *const T {
+        this.ptr.as_ptr()
+    }
 }
 
 impl_deref_traits!(Ref);
@@ -698,6 +708,26 @@ impl<T: ?Sized> RefMut<T> {
                 _phantom: PhantomData,
             },
         )
+    }
+
+    /// Returns a raw pointer to the `RefMut`'s referent.
+    ///
+    /// The caller must ensure that the `RefMut` outlives the pointer this
+    /// function returns, or else it may end up dangling.
+    #[inline]
+    #[must_use]
+    pub fn as_ptr(this: &Self) -> *const T {
+        this.ptr.as_ptr()
+    }
+
+    /// Returns a raw mutable pointer to the `RefMut`'s referent.
+    ///
+    /// The caller must ensure that the `RefMut` outlives the pointer this
+    /// function returns, or else it may end up dangling.
+    #[inline]
+    #[must_use]
+    pub fn as_mut_ptr(this: &mut Self) -> *mut T {
+        this.ptr.as_ptr()
     }
 }
 
