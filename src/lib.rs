@@ -661,7 +661,7 @@ impl<T: ?Sized> From<RefMut<T>> for Ref<T> {
 pub struct RefMut<T: ?Sized> {
     ptr: NonNull<T>,
     _lien: Lien,
-    _phantom: PhantomData<*mut T>,
+    _phantom: PhantomData<(*mut T, &'static mut ())>,
 }
 
 // SAFETY: RefMut<T> is morally &mut T, which inherits T's Send and Sync-ness
