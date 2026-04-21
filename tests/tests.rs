@@ -1,5 +1,10 @@
 use lien::*;
 
+// TODO: i wish we had more (and better) tests, these may not cover every line
+
+// TODO: it might make sense to add a loom backend like we added a miri backend
+// and more or less run all these tests in loom
+
 #[test]
 fn scope_lend_read() {
     let value = 42;
