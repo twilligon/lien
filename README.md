@@ -4,6 +4,7 @@
 [![crates.io](https://img.shields.io/crates/v/lien.svg)](https://crates.io/crates/lien) [![docs.rs](https://docs.rs/lien/badge.svg)](https://docs.rs/lien/)
 
 > **🚧 Under construction 🚧**
+>
 > This crate is somewhat experimental: the recommended API may change (in semver-compatible ways) in future versions.
 
 Scoped lending of borrowed references as `Send`-able smart pointers. Like `thread::scope` without the thread!
